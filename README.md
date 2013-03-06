@@ -3,10 +3,6 @@ modown-static
 
 modown static and combo handler
 
-# Modown Static Component
-
-This compontent .
-
 ## Goals
 
  * register and serve static assets from a specific folder

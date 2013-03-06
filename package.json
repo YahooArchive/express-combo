@@ -1,0 +1,34 @@
+{
+    "name": "modown-static",
+    "description": "Modown Static Component",
+    "version": "0.0.1-2",
+    "author": "Caridy Patino <caridy@yahoo-inc.com> (http://github.com/caridy)",
+    "contributors": [
+        "alberto chan <albertoc@yahoo-inc.com>"
+    ],
+    "engines": {
+        "node": "0.8.x",
+        "npm": "1.1.x"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "express": "3.x",
+        "express-expose": "0.3.x",
+        "express3-handlebars": "0.3.x",
+        "yui": "3.8.x",
+        "yuitest": "0.7.x",
+        "ytestrunner": "0.3.x",
+        "yuidocjs": "0.3.x"
+    },
+    "main": "index",
+    "keywords": [
+        "framework",
+        "yui",
+        "mojito",
+        "modown",
+        "static"
+    ],
+    "scripts": {
+        "test": "./node_modules/ytestrunner/lib/cli.js -c --include tests/units/**/*.js"
+    }
+}

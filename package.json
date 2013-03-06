@@ -10,9 +10,10 @@
         "node": "0.8.x",
         "npm": "1.1.x"
     },
-    "dependencies": {},
+    "dependencies": {
+        "express": "3.x"
+    },
     "devDependencies": {
-        "express": "3.x",
         "express-expose": "0.3.x",
         "express3-handlebars": "0.3.x",
         "yui": "3.8.x",

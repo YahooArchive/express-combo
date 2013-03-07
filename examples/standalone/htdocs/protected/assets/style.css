@@ -1,0 +1,8 @@
+/* 
+ * Include your css here.
+ *
+ * This CSS is being accessed from using an explicity asset mapping.
+ */
+body {
+  text-align: right;
+}

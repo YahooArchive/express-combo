@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Static Handler Example 1</title>
+    <link rel="stylesheet" type="text/css" href="/protected/assets/style.css"/>
+  </head>
+  <body>
+
+    <div>
+      This page is served from: <span>/protected/two.html</span>
+    </div>
+    <div>
+      There are more files located in the same direcotry as this page, but
+      because the path "/protected" is mounted using "static.map" method, only
+      the explicitly declared assets are publicly exposed.
+    </div>
+  </body>
+</html>

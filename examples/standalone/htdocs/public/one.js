@@ -1,0 +1,1 @@
+// JS served from `/public/one.js`

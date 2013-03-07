@@ -3,7 +3,11 @@
 <head>
     <meta charset="utf-8" />
 
-    <title>stand alone usage of `modown-yui`</title>
+    <title>static handler demo page</title>
+
+    <link rel="stylesheet" type="text/css" href="/foo/bar/assets/style.css" />
+    <link rel="stylesheet" type="text/css" href="/baz/qux/also/style.css" />
+    <link rel="stylesheet" type="text/css" href="/combo~/bar/assets/style.css~/qux/also/style.css" />
 
 </head>
 <body>
@@ -14,7 +18,9 @@
         Page Loaded OK
     </div>
 
-    <script>
-    </script>
+    <script src="/foo/bar/one.js"></script>
+    <script src="/baz/qux/another/two.js"></script>
+    <script src="/combo~/bar/one.js~/qux/another/two.js"></script>
+
 </body>
 </html>

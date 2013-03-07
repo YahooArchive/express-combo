@@ -2,21 +2,42 @@
 
 'use strict';
 
-var express = require('express'),
-    exphbs  = require('express3-handlebars'),
-    libstatic  = require('../../'),
-    app     = express();
+var libpath        = require('path'),
+    express        = require('express'),
+    exphbs         = require('express3-handlebars'),
+    statichandler  = require('../../'),
+    app            = express(),
+    appRootPath    = __dirname;
 
+// setup public folders
+// test urls:
+// /foo/bar/one.js           => $root/htdocs/public/one.js
+// /foo/bar/assets/style.css => $root/htdocs/public/assets/style.css
+app.use('/foo', statichandler.folder('bar', '/public', {
+    // maxAge: 123,
+    root: libpath.join(appRootPath, 'htdocs')
+}));
 
-app.configure('development', function () {
+// setup "protected" files by providing a specific mapping.
+// "protected" does not mean "access control", but only exposing a limited
+// number of files without serving the entire directory.
+// .e.g. application can use a "resolver" to get that metadata generated.
+// test urls:
+// /baz/qux/another/two.js => $root/htdocs/protected/two.js
+// /baz/qux/also/style.css => $root/htdocs/protected/assets/style.css
+app.use('/baz', statichandler.map('qux', {
+    "another/two.js": libpath.join('protected', 'two.js'),
+    "also/style.css": libpath.join('protected', 'assets', 'style.css')
+}, {
+    // maxAge: 123,
+    root: libpath.join(appRootPath, 'htdocs')
+}));
 
-
-});
-
-app.configure('production', function () {
-
-
-});
+app.use(statichandler.combine({
+    comboBase: '/combo~',
+    comboSep: '~'
+    // maxAge: 123
+}));
 
 // template engine
 app.engine('handlebars', exphbs());

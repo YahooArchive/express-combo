@@ -9,26 +9,34 @@ var libpath        = require('path'),
     app            = express(),
     appRootPath    = __dirname;
 
-
-app.configure('development', function () {
-});
-
-app.configure('production', function () {
-});
-
 // setup public folders
 // test urls:
-// /public/one.html => $root/htdocs/public/one.html
-// /public/assets/style.css => $root/htdocs/public/assets/style.css
-app.use('/public', statichandler.share(libpath.join(appRootPath, 'htdocs', 'public')));
+// /foo/bar/one.js           => $root/htdocs/public/one.js
+// /foo/bar/assets/style.css => $root/htdocs/public/assets/style.css
+app.use('/foo', statichandler.folder('bar', '/public', {
+    // maxAge: 123,
+    root: libpath.join(appRootPath, 'htdocs')
+}));
 
-// setup "protected" folders by providing a specific mapping.
+// setup "protected" files by providing a specific mapping.
 // "protected" does not mean "access control", but only exposing a limited
-// number of files without opening the entire directory to "public".
+// number of files without serving the entire directory.
 // .e.g. application can use a "resolver" to get that metadata generated.
-app.use('/protected', statichandler.map({
-    "/two.html": libpath.join(appRootPath, 'htdocs', 'protected', 'two.html'),
-    "/assets/style.css": libpath.join(appRootPath, 'htdocs', 'protected', 'assets', 'style.css')
+// test urls:
+// /baz/qux/another/two.js => $root/htdocs/protected/two.js
+// /baz/qux/also/style.css => $root/htdocs/protected/assets/style.css
+app.use('/baz', statichandler.map('qux', {
+    "another/two.js": libpath.join('protected', 'two.js'),
+    "also/style.css": libpath.join('protected', 'assets', 'style.css')
+}, {
+    // maxAge: 123,
+    root: libpath.join(appRootPath, 'htdocs')
+}));
+
+app.use(statichandler.combine({
+    comboBase: '/combo~',
+    comboSep: '~'
+    // maxAge: 123
 }));
 
 // template engine

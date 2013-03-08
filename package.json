@@ -11,12 +11,15 @@
         "npm": "1.1.x"
     },
     "dependencies": {
-        "express": "3.x"
+        "express": "3.x",
+        "debug": "*",
+        "send": "0.1.0",
+        "mime": "1.2.6",
+        "fresh": "0.1.0",
+        "range-parser": "0.0.4"
     },
     "devDependencies": {
-        "express-expose": "0.3.x",
         "express3-handlebars": "0.3.x",
-        "yui": "3.8.x",
         "yuitest": "0.7.x",
         "ytestrunner": "0.3.x",
         "yuidocjs": "0.3.x"
@@ -24,7 +27,7 @@
     "main": "index",
     "keywords": [
         "framework",
-        "yui",
+        "combo",
         "mojito",
         "modown",
         "static"

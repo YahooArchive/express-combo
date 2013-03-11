@@ -1,6 +1,7 @@
 {
     "shared": {
         "notification_email": "nobody@yahoo-inc.com",
+        "build_container": "node8",
         "compilers": {
             "updateversion": {
                 "compiler": "updateversion"
@@ -14,6 +15,9 @@
                     "compile_commands": [
                         "updateversion"
                     ]
+                },
+                "publish": {
+                    "task": "none"
                 }
             }
         }

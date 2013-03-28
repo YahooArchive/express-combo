@@ -327,7 +327,7 @@ describe('static', function () {
                 assert.isTrue(sendStream.pipeWasCalled,
                               'SendStream.pipe was not called');
                 // restore
-                getAssetFromFSfn = libstatic.getAssetFromFS;
+                libstatic.getAssetFromFS = getAssetFromFSfn;
             };
 
             // do real work
@@ -455,6 +455,7 @@ describe('static', function () {
             assert.isTrue(callbackWasCalled, 'callback was not called');
         });
 
+
         // should skip to the next middleware if no group mapping is found
         it('should skip if no mapping', function () {
             var fn,
@@ -478,7 +479,7 @@ describe('static', function () {
     });
 
 
-    describe.only('#combine', function () {
+    describe('#combine', function () {
 
         function registerTestGroups() {
             /*
@@ -491,6 +492,10 @@ describe('static', function () {
             });
             */
             var rootDir = __dirname + '/../fixtures';
+            // Expose the `fixtures` directory under public
+            libstatic.folder('public', rootDir, {
+                // express.static options here
+            });
             libstatic.map('app', {
                 'public/one.js': rootDir + '/public/one.js',
                 'public/two.js': rootDir + '/public/two.js'
@@ -569,6 +574,134 @@ describe('static', function () {
                 fn(req, res, nextHandler);
 
                 assert.isTrue(nextHandlerWasCalled, 'next() was not called');
+
+                libstatic.getAssetFromFS = getAssetFromFSfn;
+            });
+        });
+
+        // verify:
+        // - skip to the next middleware
+        // - no error is passed back
+        // - no call is made on stream.pipe|error|onStatError
+        describe('Test url that do not match the comboBase', function () {
+            it('should skip to the next middleware', function () {
+                var fn,
+                    req,
+                    res;
+
+                registerTestGroups();
+                // should not match `/app/`
+                req = { url: "/nonmatchingcombobase/foo/bar", method: "GET" };
+
+                fn = libstatic.combine({
+                    comboBase: '/combo?',
+                    comboSep: '~'
+                });
+
+                fn(req, res, function (err) {
+                    assert.isUndefined(err, 'no error expected');
+                    // verify that this.pipe was not called
+                });
+            });
+        });
+
+        // verify:
+        // - skip to the next middleware
+        // - no error is passed back
+        // - no call is made on stream.pipe|error|onStatError
+        describe('Test req.method that is invalid', function () {
+            it('should skip to the next middleware', function () {
+                var fn,
+                    req,
+                    res;
+
+                registerTestGroups();
+                // pay attention to the combo req format here
+                req = { url: "/combo?/app/public/one.js", method: "POST" };
+
+                fn = libstatic.combine({
+                    comboBase: '/combo?',
+                    comboSep: '~'
+                });
+
+                fn(req, res, function (err) {
+                    assert.isUndefined(err, 'no error expected');
+                    // verify that this.pipe was not called
+                });
+            });
+        });
+
+        // verify:
+        // - stream.on('error') error is handled correctly
+        describe('Test stream.on(error) is handled correctly', function () {
+            it('should call next(err)', function () {
+                var fn,
+                    nextHandler,
+                    req,
+                    res,
+                    nextHandlerWasCalled = false;
+
+                registerTestGroups();
+                nextHandler = function (err) {
+                    nextHandlerWasCalled = true;
+                    assert.isString(err, 'err String expected');
+                    assert.strictEqual('Error streaming data',
+                                       err,
+                                       'wrong error message');
+
+                };
+                req = { url: '/foo/bar/one.js', method: 'GET' };
+
+                fn = libstatic.combine({
+                    // SendStream mock
+                    mockNext: nextHandler,
+                    mockOnError: true // Error streaming data
+                });
+                fn(req, res, nextHandler);
+
+                assert.isTrue(nextHandlerWasCalled, 'next() was not called by fn');
+
+            });
+        });
+
+        // Test #combine with folder() instead of map() so that normalize() can
+        // be tested
+        // verify:
+        // - group is setup with `folder` with groupName `public` with the
+        // `fixtures` directory as the `rootDir`
+        // - that the url passed to getAssetFromFS() matches expected URL
+        //
+        // What we are not testing:
+        // - if SendStream.pipe() is being called
+        describe('Test combine() with folder() mapping instead of map()', function () {
+            it('should return contents of robot.txt OK', function () {
+                var fn,
+                    req,
+                    res,
+                    getAssetFromFSfn,
+                    getAssetFromFSwasCalled = false;
+
+                getAssetFromFSfn = libstatic.getAssetFromFS;
+                libstatic.getAssetFromFS = function (path, cb) {
+                    getAssetFromFSwasCalled = true;
+                    console.log('--> path    : %s', path);
+                    console.log('--> expected: %s', libpath.join(__dirname, '..', 'fixtures', 'robot.txt'));
+                    assert.strictEqual(libpath.normalize(path),
+                                      libpath.normalize(libpath.join(__dirname, '..', 'fixtures', 'robot.txt')),
+                                      'wrong path expected: check normalize()');
+                };
+                registerTestGroups();
+                req = { url: '/combo?/public/robot.txt', method: 'GET' };
+                fn = libstatic.combine({
+                    comboBase: '/combo?'
+                });
+                fn(req, res, function () {
+                    // nothing to assert here
+                });
+
+                assert.isTrue(getAssetFromFSwasCalled,
+                              'getAssetFromFS was not called');
+                libstatic.getAssetFromFS = getAssetFromFSfn;
             });
         });
 

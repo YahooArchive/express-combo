@@ -36,6 +36,23 @@ describe('static', function () {
             };
         };
 
+        /**
+        The `options` parameter contains specific properties for the mock. See
+        description below.
+
+        The constructor also set the following properties on init:
+        - {Boolean} `maxageWasCalled` 
+        - {Boolean} `pipeWasCalled` 
+
+
+        @constructor SendStream
+        @param {http.ServerResponse} res
+        @param {Object} options
+          @param {Boolean} options.mockError
+          @param {Boolean} options.mockOnError
+          @param {Boolean} options.mockOnStatError
+          @param {Function} options.mockNext
+        **/
         sendMock = function (res, options) {
             this.res = res;
             this.options = options;
@@ -51,6 +68,16 @@ describe('static', function () {
                 // have chosen to be `200`
                 if (age !== 0) {
                     assert.strictEqual(200, age, 'age should be 200');
+                }
+            },
+            error: function (code, message) {
+                if (this.options.mockError &&
+                        this.options.mockError === true) {
+
+                    var error = new Error();
+                    error.code = code;
+                    error.message = message;
+                    this.options.mockNext(error);
                 }
             },
             on: function (event, cb) {
@@ -73,12 +100,16 @@ describe('static', function () {
                 }
             },
             pipe: function (data, stat) {
-                // TODO: how to assert data + stat ?
                 this.pipeWasCalled = true;
+                this.mock = this.mock || {};
+                this.mock.data = data;
+                this.mock.stat = stat;
 
                 // `next` is within the return function of `map`
                 if (this.options.mockNext &&
                         typeof this.options.mockNext === "function") {
+                    // passing the stream to the `next` handler so that we can
+                    // query the `stream` for verifying some flags
                     this.options.mockNext(this);
                 }
             }
@@ -104,6 +135,7 @@ describe('static', function () {
     }
 
     beforeEach(function () {
+        // console.log('---- beforeEach ----');
         registerMockery();
 
         middlewareWasCalled = false;
@@ -115,6 +147,8 @@ describe('static', function () {
     });
 
     describe('#dedupe', function () {
+        // verify:
+        // arrays of `objects` are being deduped as expected
         it('should remove all dupes OK', function () {
             var input = [1, 2, 3, "hello", 3, 3, 2, 1, "hello"],
                 expected = [1, 2, 3, "hello"],
@@ -318,7 +352,6 @@ describe('static', function () {
 
         });
 
-        // XX;
         // should pass error if getAssetFromFS encounter error
         it('should return error if getAssetFromFS fails', function () {
             var fn,
@@ -361,6 +394,7 @@ describe('static', function () {
             //
             libstatic.getAssetFromFS = getAssetFromFSfn;
         });
+
         // should pass error if SendStream encounters error while streaming
         it('should return error if SendStream fails', function () {
             var fn,
@@ -444,11 +478,108 @@ describe('static', function () {
     });
 
 
-    describe('#combine', function () {
-        it('should register OK');
+    describe.only('#combine', function () {
+
+        function registerTestGroups() {
+            /*
+            libstatic.addGroup({
+                prefix: '/yui/',
+                rootPath: __dirname + '/../fixtures/',
+                config: {
+                    // options to pass to express.static
+                }
+            });
+            */
+            var rootDir = __dirname + '/../fixtures';
+            libstatic.map('app', {
+                'public/one.js': rootDir + '/public/one.js',
+                'public/two.js': rootDir + '/public/two.js'
+            }, {
+                // express.static options here
+            });
+
+            console.log(libstatic.getGroups());
+        }
+
+        // assumption:
+        // - no errors
+        // verify:
+        // - files are `piped` as expected
+        //
+        // NOTE: error handling are done in subsequent tests
+        describe('Normal flow with no errors', function () {
+            it('should pipe files OK', function () {
+                var config,
+                    fn,
+                    req,
+                    res,
+                    getAssetFromFSfn,
+                    nextHandler,
+                    nextHandlerWasCalled = false;
+
+                getAssetFromFSfn = libstatic.getAssetFromFS;
+                libstatic.getAssetFromFS = function (path, cb) {
+                    console.log('---- path: ' + path);
+                    var data,
+                        body;
+                    body = '-two-';
+                    if (path.indexOf('one.js') > -1) {
+                        body = '-one-';
+                    }
+                    data = {
+                        stat: { mtime: Date().now },
+                        body: new Buffer(body)
+                    };
+                    cb(null, data);
+                };
+                nextHandler = function (stream) {
+                    nextHandlerWasCalled = true;
+                    assert.isObject(stream, 'SendStream instance expected');
+                    assert.isTrue(stream.pipeWasCalled,
+                                  'stream.pipe was not called');
+
+                    assert.isString(stream.mock.data,
+                                    'stream.data provided invalid data string');
+                    assert.isObject(stream.mock.stat,
+                                    'stream.pipe provided invalid stat object');
+                    console.log('---- data: ' + stream.mock.data);
+                    assert.strictEqual('-one--two-',
+                                       stream.mock.data,
+                                       'data does not match');
+                };
+
+                config = {
+                    comboSep: '#',
+                    comboBase: '/appcombo?',
+                    // mock
+                    mockNext: nextHandler
+                };
+                registerTestGroups();
+                // NOTE: how the /<group>/ is part of the url
+                req = {
+                    url: config.comboBase + '/app/public/one.js#/app/public/two.js',
+                    method: 'GET'
+                };
+
+                fn = libstatic.combine(config);
+                assert.isFunction(fn,
+                                    'returned value from libstatic.combine ' +
+                                    'should be a function');
+
+                fn(req, res, nextHandler);
+
+                assert.isTrue(nextHandlerWasCalled, 'next() was not called');
+            });
+        });
+
+        describe('Test mixed content types', function () {
+            it('should call stream.error');
+        });
     });
 
+    //////////////////////////////////////////////////////////////////////////
     // non-public interface
+    //////////////////////////////////////////////////////////////////////////
 
     describe('#getGroupFromURL', function () {
         it('should match expected groups', function () {

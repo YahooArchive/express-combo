@@ -38,8 +38,7 @@
         "static"
     ],
     "scripts": {
-        "posttest": "./node_modules/istanbul/lib/cli.js cover -- ./node_modules/mocha/bin/_mocha tests/lib/*.js --globals foo --reporter spec",
-        "pretest": "./node_modules/.bin/jslint lib/*.js tests/lib/*.js",
-        "test": "./node_modules/.bin/mocha tests/lib/*.js --reporter spec"
+        "cover": "./node_modules/istanbul/lib/cli.js cover -- ./node_modules/mocha/bin/_mocha tests/lib/*.js --globals foo --reporter spec",
+        "test": "./node_modules/.bin/jslint lib/*.js tests/lib/*.js && ./node_modules/.bin/mocha tests/lib/*.js --reporter spec"
     }
 }

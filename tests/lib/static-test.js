@@ -84,7 +84,7 @@ describe('static', function () {
                 if (event === "error") {
                     if (this.options.mockOnError &&
                             this.options.mockOnError === true) {
-                        console.log('---- mockOnError ----');
+                        // console.log('---- mockOnError ----');
                         cb("Error streaming data");
                     }
                 }
@@ -272,7 +272,7 @@ describe('static', function () {
                     };
 
                     fn(req, res, function () {
-                        console.log(req);
+                        // console.log(req);
 
                         assert.isFalse(middlewareWasCalled,
                                        'express.static should ' +
@@ -294,7 +294,7 @@ describe('static', function () {
         // verify:
         it('should read from FS with valid mapping', function () {
 
-            console.log('---- #map was called ----');
+            // console.log('---- #map was called ----');
 
             var fn,
                 req,
@@ -316,12 +316,12 @@ describe('static', function () {
                                    path,
                                    'wrong path');
 
-                console.log('--- getAssetFromFS was called ----');
+                // // console.log('--- getAssetFromFS was called ----');
 
                 cb(null, { body: 'body', stat: { key: 'value' } });
             };
             nextHandler = function (sendStream) {
-                console.log('--- CB was called ----');
+                // // console.log('--- CB was called ----');
                 assert.isTrue(sendStream.maxageWasCalled,
                               'SendStream.maxage was not called');
                 assert.isTrue(sendStream.pipeWasCalled,
@@ -374,7 +374,7 @@ describe('static', function () {
 
             nextHandler = function (err) {
                 callbackWasCalled = true;
-                console.log('--- ' + err + ' ----');
+                // console.log('--- ' + err + ' ----');
                 assert.isString(err, 'err should be set');
                 assert.strictEqual("Error reading file",
                                    err,
@@ -421,7 +421,7 @@ describe('static', function () {
             });
             fn(req, res, function (err) {
                 callbackWasCalled = true;
-                console.log('--- ' + err + ' ----');
+                // console.log('--- ' + err + ' ----');
                 assert.isString(err, 'err should be set');
                 assert.strictEqual("Error streaming data",
                                    err,
@@ -503,7 +503,7 @@ describe('static', function () {
                 // express.static options here
             });
 
-            console.log(libstatic.getGroups());
+            // console.log(libstatic.getGroups());
         }
 
         // assumption:
@@ -524,7 +524,7 @@ describe('static', function () {
 
                 getAssetFromFSfn = libstatic.getAssetFromFS;
                 libstatic.getAssetFromFS = function (path, cb) {
-                    console.log('---- path: ' + path);
+                    // console.log('---- path: ' + path);
                     var data,
                         body;
                     body = '-two-';
@@ -547,7 +547,7 @@ describe('static', function () {
                                     'stream.data provided invalid data string');
                     assert.isObject(stream.mock.stat,
                                     'stream.pipe provided invalid stat object');
-                    console.log('---- data: ' + stream.mock.data);
+                    // // console.log('---- data: ' + stream.mock.data);
                     assert.strictEqual('-one--two-',
                                        stream.mock.data,
                                        'data does not match');
@@ -684,8 +684,8 @@ describe('static', function () {
                 getAssetFromFSfn = libstatic.getAssetFromFS;
                 libstatic.getAssetFromFS = function (path, cb) {
                     getAssetFromFSwasCalled = true;
-                    console.log('--> path    : %s', path);
-                    console.log('--> expected: %s', libpath.join(__dirname, '..', 'fixtures', 'robot.txt'));
+                    // console.log('--> path    : %s', path);
+                    // console.log('--> expected: %s', libpath.join(__dirname, '..', 'fixtures', 'robot.txt'));
                     assert.strictEqual(libpath.normalize(path),
                                       libpath.normalize(libpath.join(__dirname, '..', 'fixtures', 'robot.txt')),
                                       'wrong path expected: check normalize()');

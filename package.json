@@ -25,6 +25,7 @@
         "jslint": "*",
         "mocha": "1.8.x",
         "mockery": "1.4.x",
+        "xunit-file": "*",
         "yuitest": "0.7.x",
         "ytestrunner": "0.3.x",
         "yuidocjs": "0.3.x"

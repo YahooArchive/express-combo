@@ -11,7 +11,6 @@
 
 var assert = require('chai').assert,
     libpath = require('path'),
-    // libstatic = require('../../lib/static'),
     libstatic,
     mockery = require('mockery'),
     fixturesPath = libpath.join(__dirname, '../fixtures');
@@ -20,14 +19,10 @@ describe('static', function () {
 
     // flag to track express.static
     var middlewareWasCalled,
-        // libstatic;
         staticMock, // express.static
         sendMock; // SendStream
 
     function registerMockery() {
-
-        // var sendMock,
-        //     staticMock;
 
         staticMock = function (rootPath, options) {
             return function (req, res, next) {
@@ -140,29 +135,10 @@ describe('static', function () {
 
         middlewareWasCalled = false;
         // reset the group registration
-        libstatic.setGroups(undefined);
+        libstatic._groups = undefined;
     });
     afterEach(function () {
         deregisterMockery();
-    });
-
-    describe('#dedupe', function () {
-        // verify:
-        // arrays of `objects` are being deduped as expected
-        it('should remove all dupes OK', function () {
-            var input = [1, 2, 3, "hello", 3, 3, 2, 1, "hello"],
-                expected = [1, 2, 3, "hello"],
-                out,
-                i;
-            out = libstatic.dedupe(input);
-            assert.isArray(out, 'return value of dedupe should be an Array');
-            assert.isTrue(expected.length === out.length, 'wrong array length');
-
-            for (i = 0; i < out.length; i = i + 1) {
-                assert.isTrue(expected.indexOf(out[i]) > -1,
-                              'item ' + out[i] + ' not expected');
-            }
-        });
     });
 
     describe('#getAssetFromFS', function () {
@@ -212,13 +188,13 @@ describe('static', function () {
                 rootPath = libpath.join(fixturesPath, 'static');
                 config = { foo: 'bar' };
 
-                assert.isUndefined(libstatic.getGroups(), 'no groups registered yet');
+                assert.isUndefined(libstatic._groups, 'no groups registered yet');
                 fn = libstatic.folder('yui', rootPath, config);
                 // console.log(fn.toString());
 
-                assert.equal(1, libstatic.getGroups().length, 'at least one groups registered');
+                assert.equal(1, libstatic._groups.length, 'at least one groups registered');
 
-                group = libstatic.getGroups()[0];
+                group = libstatic._groups[0];
                 assert.equal("/yui/", group.prefix, 'wrong prefix');
                 assert.equal(rootPath, group.rootPath, 'wrong rootPath');
                 assert.equal(config.foo, group.config.foo, 'wrong config');
@@ -336,13 +312,13 @@ describe('static', function () {
             }, { maxAge: 200, foo: 'bar', mockNext: nextHandler });
 
             assert.isFunction(fn, 'return value of #map should be a function');
-            assert.equal(1, libstatic.getGroups().length,
+            assert.equal(1, libstatic._groups.length,
                           'only 1 group expected');
             assert.deepEqual({"one.html": "/root/one.html"},
-                             libstatic.getGroups()[0].urls,
+                             libstatic._groups[0].urls,
                              "wrong urls mapping");
             assert.strictEqual('bar',
-                               libstatic.getGroups()[0].config.foo,
+                               libstatic._groups[0].config.foo,
                                'wrong config value');
 
             // HACK: stream.pipe does not call next, so need a way to get this
@@ -482,15 +458,6 @@ describe('static', function () {
     describe('#combine', function () {
 
         function registerTestGroups() {
-            /*
-            libstatic.addGroup({
-                prefix: '/yui/',
-                rootPath: __dirname + '/../fixtures/',
-                config: {
-                    // options to pass to express.static
-                }
-            });
-            */
             var rootDir = __dirname + '/../fixtures';
             // Expose the `fixtures` directory under public
             libstatic.folder('public', rootDir, {
@@ -503,7 +470,7 @@ describe('static', function () {
                 // express.static options here
             });
 
-            // console.log(libstatic.getGroups());
+            // console.log(libstatic._groups);
         }
 
         // assumption:
@@ -719,7 +686,8 @@ describe('static', function () {
 
             var group;
 
-            libstatic.addGroup({
+            libstatic._groups = libstatic._groups || [];
+            libstatic._groups.push({
                 prefix: '/yui/',
                 rootPath: '/somewhere/',
                 config: { }
@@ -727,7 +695,7 @@ describe('static', function () {
 
             group = libstatic.getGroupFromURL('/yui/foo/foo-debug/js');
 
-            assert.deepEqual(libstatic.getGroups()[0],
+            assert.deepEqual(libstatic._groups[0],
                              group,
                              'wrong group');
 
@@ -742,7 +710,8 @@ describe('static', function () {
         it('should return undefined for url that do not match', function () {
             var group;
 
-            libstatic.addGroup({
+            libstatic._groups = libstatic._groups || [];
+            libstatic._groups.push({
                 prefix: '/yui/',
                 rootPath: '/etc',
                 config: {}
@@ -757,15 +726,15 @@ describe('static', function () {
     describe('#_registerGroup', function () {
         it('should match expected groups', function () {
 
-            libstatic.setGroups(undefined);
+            libstatic._groups = undefined;
 
             libstatic._registerGroup('foo');
             libstatic._registerGroup('bar');
 
-            assert.isTrue(2 === libstatic.getGroups().length,
+            assert.isTrue(2 === libstatic._groups.length,
                           'wrong number of groups');
-            assert.strictEqual('foo', libstatic.getGroups()[0], 'expected `foo`');
-            assert.strictEqual('bar', libstatic.getGroups()[1], 'expected `bar`');
+            assert.strictEqual('foo', libstatic._groups[0], 'expected `foo`');
+            assert.strictEqual('bar', libstatic._groups[1], 'expected `bar`');
         });
     });
 

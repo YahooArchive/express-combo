@@ -1,0 +1,1 @@
+// sample robot file to test combine() with folder()

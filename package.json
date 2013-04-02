@@ -1,7 +1,7 @@
 {
     "name": "modown-static",
     "description": "Modown Static Component",
-    "version": "0.0.1-11",
+    "version": "0.0.1-17",
     "author": "Caridy Patino <caridy@yahoo-inc.com> (http://github.com/caridy)",
     "contributors": [
         "alberto chan <albertoc@yahoo-inc.com>"
@@ -19,7 +19,13 @@
         "range-parser": "0.0.4"
     },
     "devDependencies": {
+        "chai": "1.5.x",
         "express3-handlebars": "0.3.x",
+        "istanbul": "0.1.x",
+        "jslint": "*",
+        "mocha": "1.8.x",
+        "mockery": "1.4.x",
+        "xunit-file": "*",
         "yuitest": "0.7.x",
         "ytestrunner": "0.3.x",
         "yuidocjs": "0.3.x"
@@ -33,6 +39,7 @@
         "static"
     ],
     "scripts": {
-        "test": "./node_modules/ytestrunner/lib/cli.js -c --include tests/units/**/*.js"
+        "cover": "./node_modules/istanbul/lib/cli.js cover -- ./node_modules/mocha/bin/_mocha tests/lib/*.js --globals foo --reporter spec",
+        "test": "./node_modules/.bin/jslint lib/*.js tests/lib/*.js && ./node_modules/.bin/mocha tests/lib/*.js --reporter spec"
     }
 }

@@ -1,6 +1,6 @@
 {
     "shared": {
-        "notification_email": "nobody@yahoo-inc.com",
+        "notification_email": "mojito-next@yahoo-inc.com",
         "build_container": "node8",
         "compilers": {
             "updateversion": {
@@ -14,6 +14,13 @@
                 "custom": {
                     "compile_commands": [
                         "updateversion"
+                    ]
+                },
+                "test": {
+                    "task": "script",
+                    "command": "node node_modules/istanbul/lib/cli.js cover --dir ${COVERAGE_DIR} -- ./node_modules/mocha/bin/_mocha tests/lib/*.js --globals foo --reporter xunit-file",
+                    "after": [
+                        "mv xunit.xml ${TEST_RESULTS_DIR}/"
                     ]
                 },
                 "publish": {

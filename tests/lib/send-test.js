@@ -14,6 +14,7 @@ var assert = require('chai').assert,
     // libsend = require('../../lib/send'),
     // SendStream = libsend.SendStream,
     SendStream = require('../../lib/send'),
+    StringStream = require('../../lib/string'),
     mockery = require('mockery'),
     fixturesPath = libpath.join(__dirname, '../fixtures');
 
@@ -130,14 +131,11 @@ describe('send', function () {
         });
     });
 
-    // removeContentHeaderFields : WIP
-    // notModified
-    // isCachable
-    // onStatError
-    // isFresh
-    // pipe
-    // send
-    // stream
+    // removeContentHeaderFields : DONE
+    // notModified : DONE
+    // isCachable : SONE
+    // onStatError : DONE
+    // isFresh : DONE
 
 
     describe('#removeContentHeaderFields', function () {
@@ -282,8 +280,346 @@ describe('send', function () {
         });
     });
 
-    /*
-    describe.only('Test #stream', function () {
+    // pipe : WIP
+    // send : WIP
+    // stream : DONE
+
+    // objective:
+    describe('Test #pipe', function () {
+        it('should call SendStream.send()', function () {
+            var sendCalled = false,
+                mockData,
+                mockStat;
+            mockData = 'TESTING';
+            mockStat = {
+            };
+            // use default stream instance
+            // /foo/bar?raise=25%
+            stream.path = '/foo/bar?raise=25%25';
+
+            // mock SendStream.send()
+            stream.send = function (data, stat) {
+                sendCalled = true;
+                assert.strictEqual(mockData,
+                                   data,
+                                   'wrong data expected');
+                assert.deepEqual(mockStat,
+                                 stat,
+                                 'wrong stat expected');
+            };
+
+            stream.pipe(mockData, mockStat);
+
+            assert.isTrue(sendCalled, 'stream.send() was not called');
+        });
+
+        it('should return error when decode fails', function () {
+            var errorCalled = false;
+            // use default `stream`
+            // set the path that is invalid
+            // stream.path = '/foo/$@*^';
+            stream.path = 'http:////foobar#$%^';
+            stream.error = function (code) {
+                errorCalled = true;
+                assert.strictEqual(400, code, 'expected error code 400');
+            };
+            stream.pipe('TESTING', { });
+
+            assert.isTrue(errorCalled, 'stream.error() should have been called');
+        });
+
+        it('should return error when path is null', function () {
+            var errorCalled = false;
+            // use default `stream`
+            // set the path to null
+            stream.path = '/foo/\u0000';
+            stream.error = function (code) {
+                errorCalled = true;
+                assert.strictEqual(400, code, 'expected error code 400');
+            };
+            stream.pipe('TESTING', { });
+
+            assert.isTrue(errorCalled, 'stream.error() should have been called');
+        });
+    });
+
+
+    // description:
+    // - verify that setHeader() is called
+    // - verify that type() is called
+    describe('Test #send', function () {
+
+        it('should stream.', function () {
+            var setHeaderCalled = false, // SendStream.setHeader
+                resSetHeaderCalled = false, // res.setHeader
+                typeCalled = false, // SendStream.type
+                streamCalled = false, // SendStream.stream
+                res,
+                stat;
+
+            res = {
+                req: {
+                    originalUrl: '/foo/index.html',
+                    headers: {
+                       // no range 
+                    }
+                },
+                setHeader: function (name, value) {
+                    resSetHeaderCalled = true;
+                    assert.strictEqual('Content-Length',
+                                       name,
+                                       'wrong header name');
+                    // based on stat.size
+                    assert.strictEqual(100, value, 'wrong content-length');
+                }
+            };
+            stat = {
+                size: 100
+            };
+
+            stream = new SendStream(res, {foo: 'bar' });
+            stream.setHeader = function (st) {
+                setHeaderCalled = true;
+                assert.deepEqual(stat,
+                                 st,
+                                 'wrong stat object passed in');
+            };
+            stream.type = function (ppath) {
+                typeCalled = true;
+                assert.strictEqual(res.req.originalUrl,
+                                   ppath,
+                                   'wrong path');
+            };
+            stream.stream = function (data, options) {
+                streamCalled = true;
+                assert.strictEqual('TESTING', data, 'wrong data');
+                assert.deepEqual({ foo: 'bar' }, // options passed to SendStream
+                                 options,
+                                 'wrong options');
+            };
+
+
+            stream.send('TESTING', stat);
+
+            assert.isTrue(setHeaderCalled, 'setHeader(stat) was not called');
+            assert.isTrue(resSetHeaderCalled, 'res.setHeader() was not called');
+            assert.isTrue(typeCalled, 'type(path) was not called');
+            assert.isTrue(streamCalled, 'stream(data, stat) was not called');
+        });
+
+        // verify that this.notModified() is called
+        it('should support conditional GET', function () {
+            var notModifiedCalled = false;
+
+            // use default stream
+            stream.setHeader = function () { };
+            stream.type = function () { };
+            stream.isConditionalGET = function () { return true; };
+            stream.isCachable = function () { return true; };
+            stream.isFresh = function () { return true; };
+            stream.notModified = function () {
+                notModifiedCalled = true;
+            };
+
+            stream.send('XX', { });
+
+            assert.isTrue(notModifiedCalled, 'SendStream.notModifed() was not called');
+        });
+
+
+        // 
+        it('should support content range', function () {
+            var res,
+                setHeaderContentRangeCalled = false,
+                setHeaderContentLengthCalled = false;
+
+            // use default stream
+            // only reques the 2nd 20-bytes range
+            res = {
+                req: {
+                    originalUrl: '/foo/index.html',
+                    headers: {
+                        // range to return
+                        range: "bytes=20-40"
+                    }
+                },
+                setHeader: function (name, value) {
+                    if (name === "Content-Range") {
+                        setHeaderContentRangeCalled = true;
+                        assert.strictEqual('bytes 20-40/100',
+                                           value,
+                                           'unexpected content-range value');
+                    } else if (name === "Content-Length") {
+                        setHeaderContentLengthCalled = true;
+                        assert.strictEqual(21,
+                                           value,
+                                           'unxpected content-length');
+                    }
+                }
+            };
+            // passing range in options is an alternative to `range` header
+            // stream = new SendStream(res, { start: 200, end: 400});
+            stream = new SendStream(res, { });
+
+            stream.setHeader = function () { };
+            stream.type = function () { };
+            stream.isConditionalGET = function () { return false; };
+            stream.stream = function () { };
+
+            // expected offset is 80
+            stream.send('XX', { size: 100 });
+
+            assert.isTrue(setHeaderContentRangeCalled,
+                          'setHander(Content-Range) was not called');
+            assert.isTrue(setHeaderContentLengthCalled,
+                          'setHander(Content-Length) was not called');
+
+        });
+
+        it('should support bad content range by returning error', function () {
+
+            var res,
+                setHeaderContentRangeCalled = false,
+                errorCalled = false;
+            res = {
+                req: {
+                    originalUrl: '/foo/index.html',
+                    headers: {
+                        // should cause parseRange to return -1
+                        range: 'bytes=aa-bb'
+                    }
+                },
+                setHeader: function (name, value) {
+                    if ("Content-Range" === name) {
+                        setHeaderContentRangeCalled = true;
+                        assert.strictEqual("bytes**/200",
+                                           value,
+                                           "range should be `bytes**/200`");
+                    }
+                }
+            };
+
+            stream = new SendStream(res, { });
+            stream.setHeader = function () { };
+            stream.type = function () { };
+            stream.isConditionalGET = function () { return false; };
+            stream.stream = function () { };
+
+            stream.error = function (code) {
+                errorCalled = true;
+                assert.strictEqual(416, code, 'error code should be 416');
+            };
+
+            // OK go
+            stream.send('XX', { size: 200 });
+
+            assert.isTrue(errorCalled,
+                          'SendStream.error() was not called with error code 416');
+            assert.isTrue(setHeaderContentRangeCalled,
+                          'setHeader(Content-Range) was not called when ranges === -1');
+        });
+
+        // TODO:
+        it('should res.send() if method === HEAD');
+    });
+
+    // objective:
+    // - verity that StringStream is piped
+    // - error handlers are triggered
+    // - `end` event is emitted as expected
+    describe('Test #stream', function () {
+        // verify:
+        // - stream.pipe(res) is called with correct argument
+        it('should emit the expected events', function () {
+            var pipeCalled = true;
+
+            // setup mock for the event registration
+            res.req.on = function (event, cb) {
+                // should register the 'close' event
+                assert.strictEqual('close',
+                                    event,
+                                    'wrong event on req.on()');
+            };
+
+            // use the default `stream` instance in this test
+            stream.on('stream', function (ss) {
+                // console.log('on_stream');
+
+                // hijack the `pipe` method
+                ss.pipe = function (r) {
+                    pipeCalled = true;
+                    assert.deepEqual(res, r, 'wrong response');
+                };
+                ss.on = function (event, cb) {
+                    var events = ['error', 'end'];
+                    assert.isTrue(events.indexOf(event) > -1,
+                                  'unexpected event registration: "' + event + '"');
+                };
+                assert.isTrue(ss instanceof StringStream,
+                              'Emitted stream should be an instance of StringStream');
+            });
+            stream.stream('TESTING', { });
+
+            // assert.isTrue(resOnCalled, 'res.on() `data` event was not emitted');
+            assert.isTrue(pipeCalled, 'ss.pipe() was not called');
+        });
+
+        // verify:
+        // - stream.on('error') handler is called and set correct error code
+        //
+        // NOTE:
+        it('should emit the expected events', function () {
+
+            var res,
+                sendStreamEmitErrorCalled = false,
+                sendStreamEmitEndCalled = false;
+
+            res = {
+                req: {
+                    originalUrl: '/foo',
+                    destroy: function () { },
+                    on: function (e, cb) {
+                    }
+                },
+                _headers: {
+                }
+            };
+
+            stream = new SendStream(res, { });
+            // register events on `SendStream` first: `error`, `end`
+            // these events will be triggered by the `StringStream`
+            stream.on('error', function (e) {
+                sendStreamEmitErrorCalled = true;
+                assert.strictEqual(500,
+                                   e.status,
+                                   'err.status should be 500');
+            });
+            stream.on('end', function (e) {
+                sendStreamEmitEndCalled = true;
+            });
+
+            stream.on('stream', function (ss) {
+                // stream the `StringStream` instance and fake `emits`
+                ss.pipe = function () { };
+                ss.on = function (e, cb) {
+                    if (e === "error") {
+                        cb(new Error("ErrorONE"));
+                    } else if (e === "end") {
+                        cb();
+                    }
+                };
+            });
+            stream.stream('TESTING', { });
+
+            assert.isTrue(sendStreamEmitErrorCalled,
+                          'self.emit(error, err) was not called!');
+            assert.isTrue(sendStreamEmitEndCalled,
+                          'self.emit(end) was not called!');
+        });
+
+        /*
+        // verify:
+        // - stream.on('event') is emitted to make sure the pipe is closed
         it('should emit the expected events', function () {
             var data,
                 options;
@@ -291,9 +627,12 @@ describe('send', function () {
             data = 'FOO-BAR';
             options = { };
             stream.stream(data, options);
+            assert.fail('implement me');
         });
+        */
     });
-    */
+
+
     // type: DONE
     // setHeader : DONE
 

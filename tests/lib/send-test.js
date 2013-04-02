@@ -11,11 +11,9 @@
 
 var assert = require('chai').assert,
     libpath = require('path'),
-    // libsend = require('../../lib/send'),
-    // SendStream = libsend.SendStream,
+    mockery = require('mockery'),
     SendStream = require('../../lib/send'),
     StringStream = require('../../lib/string'),
-    mockery = require('mockery'),
     fixturesPath = libpath.join(__dirname, '../fixtures');
 
 describe('send', function () {
@@ -23,29 +21,19 @@ describe('send', function () {
         res,
         options;
 
-    function initResponse(r, o) {
-        if (r) {
-            res = r;
-        } else {
-            res = {
-                req: {
-                    originalUrl: '/foo/bar',
-                    headers: { }
-                }
-            };
-        }
-        if (o) {
-            options = o;
-        } else {
-            options = { foo: 'bar' };
-        }
-    }
-
     beforeEach(function () {
-        initResponse();
+        // create a minium usable SendStream instance.
+        // individual test case can create their own SendStream as necessary
+        res = {
+            req: { originalUrl: '/foo/bar', headers: { } }
+        };
+        options = { foo: 'bar' };
         stream = new SendStream(res, options);
     });
     afterEach(function () {
+        res = null;
+        options = null;
+        stream = null;
     });
 
     describe('Test SendStream constructor', function () {
@@ -131,16 +119,9 @@ describe('send', function () {
         });
     });
 
-    // removeContentHeaderFields : DONE
-    // notModified : DONE
-    // isCachable : SONE
-    // onStatError : DONE
-    // isFresh : DONE
-
-
-    describe('#removeContentHeaderFields', function () {
+    describe('Test #removeContentHeaderFields', function () {
         it('should remove any header with content', function () {
-            var res = {
+            res = {
                 _headers: {
                     'foo-type': 'FOO',
                     'content-type': 'CONTENTTYPE'
@@ -159,7 +140,7 @@ describe('send', function () {
         });
     });
 
-    describe('#notModified', function () {
+    describe('Test #notModified', function () {
         it('should remove any header with content and set 304', function () {
             var endCalled = false,
                 removeCalled = false,
@@ -184,10 +165,9 @@ describe('send', function () {
         });
     });
 
-    describe('#isCachable', function () {
+    describe('Test #isCachable', function () {
         it('should return FALSE if response is not cachable', function () {
             // use default stream
-            var res;
             res = {
                 req: { originalUrl: '' },
                 statusCode: 404
@@ -197,7 +177,6 @@ describe('send', function () {
             assert.isFalse(stream.isCachable(), 'response is not cachable');
         });
         it('should return TRUE if response is cachable', function () {
-            var res;
             res = {
                 req: { originalUrl: '' },
                 statusCode: 304
@@ -208,7 +187,7 @@ describe('send', function () {
         });
     });
 
-    describe('#onStatError', function () {
+    describe('Test #onStatError', function () {
         it('should call this.error with the given known error', function () {
 
             var errorCalled = false;
@@ -242,10 +221,9 @@ describe('send', function () {
         });
     });
 
-    describe('#isFresh', function () {
+    describe('Test #isFresh', function () {
         it('should call fresh', function () {
-            var res,
-                isFresh = false,
+            var isFresh = false,
                 freshMock,
                 SS;
 
@@ -277,12 +255,10 @@ describe('send', function () {
             assert.isTrue(isFresh, 'isFresh() should return true');
 
             mockery.deregisterMock('fresh');
+            mockery.disable();
         });
     });
 
-    // pipe : WIP
-    // send : WIP
-    // stream : DONE
 
     // objective:
     describe('Test #pipe', function () {
@@ -429,8 +405,7 @@ describe('send', function () {
 
         // 
         it('should support content range', function () {
-            var res,
-                setHeaderContentRangeCalled = false,
+            var setHeaderContentRangeCalled = false,
                 setHeaderContentLengthCalled = false;
 
             // use default stream
@@ -478,8 +453,7 @@ describe('send', function () {
 
         it('should support bad content range by returning error', function () {
 
-            var res,
-                setHeaderContentRangeCalled = false,
+            var setHeaderContentRangeCalled = false,
                 errorCalled = false;
             res = {
                 req: {
@@ -519,8 +493,32 @@ describe('send', function () {
                           'setHeader(Content-Range) was not called when ranges === -1');
         });
 
-        // TODO:
-        it('should res.send() if method === HEAD');
+        // verify:
+        // - if the method is HEAD, then close the response with res.end();
+        it('should res.send() if method === HEAD', function () {
+            var resEndCalled = false;
+
+            res = {
+                req: {
+                    method: 'HEAD',
+                    originalUrl: '/foo/index.html',
+                    headers: { }
+                },
+                setHeader: function () { },
+                end: function () {
+                    resEndCalled = true;
+                }
+            };
+
+            stream = new SendStream(res, {});
+            stream.setHeader = stream.type = function () { };
+            stream.isConditionalGET = function () { return false; };
+
+            // use default `stream`
+            stream.send('XX', { });
+
+            assert.isTrue(resEndCalled, 'res.end() was not called');
+        });
     });
 
     // objective:
@@ -570,19 +568,16 @@ describe('send', function () {
         // NOTE:
         it('should emit the expected events', function () {
 
-            var res,
-                sendStreamEmitErrorCalled = false,
+            var sendStreamEmitErrorCalled = false,
                 sendStreamEmitEndCalled = false;
 
             res = {
                 req: {
                     originalUrl: '/foo',
                     destroy: function () { },
-                    on: function (e, cb) {
-                    }
+                    on: function (e, cb) { }
                 },
-                _headers: {
-                }
+                _headers: { }
             };
 
             stream = new SendStream(res, { });
@@ -633,12 +628,8 @@ describe('send', function () {
     });
 
 
-    // type: DONE
-    // setHeader : DONE
-
-    describe('#type', function () {
+    describe('Test #type', function () {
         it('should do nothing if Content-Type has already been set', function () {
-            var res;
             res = {
                 req: { originalUrl: '/foo/bar' },
                 getHeader: function () {
@@ -649,13 +640,11 @@ describe('send', function () {
                     assert.isFalse(true, 'res.setHeader should not be called');
                 }
             };
-            initResponse(res);
             stream = new SendStream(res, {});
             stream.type('/foo.html');
         });
 
         it('should setHeader if Content-Type has not been set', function () {
-            var res;
             res = {
                 req: { originalUrl: '/foo/bar.html' },
                 getHeader: function () {
@@ -673,7 +662,6 @@ describe('send', function () {
                                        'wrong content type');
                 }
             };
-            initResponse(res);
             stream = new SendStream(res, {});
             stream.type('/foo.html');
         });
@@ -681,11 +669,10 @@ describe('send', function () {
     });
 
 
-    describe('#setHeader', function () {
+    describe('Test #setHeader', function () {
         it('should set set of headers based on fs.stat', function () {
 
-            var res,
-                stat;
+            var stat;
 
             // use default options
             stat = {
@@ -749,7 +736,6 @@ describe('send', function () {
                                   "setHeader(" + name + ", xxx) was not called");
                 }
             };
-            initResponse(res);
             stream = new SendStream(res, {});
             stream.maxage(20000); // 20 secs
 

@@ -22,9 +22,6 @@
                     "after": [
                         "mv xunit.xml ${TEST_RESULTS_DIR}/"
                     ]
-                },
-                "publish": {
-                    "task": "none"
                 }
             }
         }

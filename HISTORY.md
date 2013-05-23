@@ -1,4 +1,7 @@
-0.0.1 / 2013-03-04
-==================
+Express Combo Change History
+============================
 
-  * Initial release
+0.0.1 (2013-03-04)
+------------------
+
+* Initial release

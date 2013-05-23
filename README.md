@@ -1,7 +1,7 @@
-modown-static
+Express Combo
 =============
 
-modown static and combo handler
+Combo handler for express applications
 
 ## Goals
 
@@ -10,10 +10,21 @@ modown static and combo handler
  * serve combo urls based on the static assets that were registered
  * support custom filters (regex) to include and/or exclude assets
 
-## Usage as stand alone middleware for express
+
+Installation
+------------
+
+Install using npm:
+
+```shell
+$ npm install express-combo
+```
+
+Usage
+-----
 
 ```
-var statichandler = require('modown-static');
+var statichandler = require('express-combo');
 app.use('/public/',    statichandler.public('full/path/to/folder/'));
 app.use('/protected/', statichandler.map({
     "something/foo.js": "full/path/to/something/foo.js",
@@ -44,21 +55,18 @@ separator token. As a result, a urls like these will be valid:
   * http://hostname:port/combo~something/foo.js~bar.js
   * http://hostname:port/combo~whatever/file.js~something/foo.js~bar.js
 
-## Usage as a modown plugin
+License
+-------
 
-```
-modown.plug(require('modown-static'));
-app.use('/public/',    modown.static.public('full/path/to/folder/'));
-app.use('/protected/', modown.static.map({
-    "something/foo.js": "full/path/to/something/foo.js",
-    "bar.js": "full/path/to/something/bar.js"
-}));
-app.use(modown.static.combine({
-    comboBase: "/combo~",
-    comboSep: "~"
-}));
-```
+This software is free to use under the Yahoo! Inc. BSD license.
+See the [LICENSE file][] for license text and copyright information.
 
-## How to contribute
+[LICENSE file]: https://github.com/yahoo/express-combo/blob/master/LICENSE
 
-See the [CONTRIBUTE.md](CONTRIBUTE.md) file for info.
+
+Contribute
+----------
+
+See the [CONTRIBUTE file][] for info.
+
+[CONTRIBUTE file]: https://github.com/yahoo/express-combo/blob/master/CONTRIBUTE

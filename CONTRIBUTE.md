@@ -1,4 +1,4 @@
-## Contributing Code to `modown-static`
+## Contributing Code to `express-combo`
 
 - The main source files are located under `lib/`.
 - Unit tests are located under `tests/units/*`.
@@ -14,4 +14,9 @@ To run the unit tests (with coverage by default):
 
 To generate the API docs under `build/apidocs/index.html`:
 
-    ./scripts/gendocs.sh
+    rm -rf ./build/apidocs && mkdir -p ./build/apidocs
+    npm run docs
+
+To lint the app lib folder:
+
+    npm run lint

@@ -3,7 +3,10 @@ Express Combo
 
 Combo handler for express applications
 
-## Goals
+[![Build Status](https://travis-ci.org/yahoo/express-combo.png?branch=master)][Build Status]
+
+Goals
+-----
 
  * register and serve static assets from a specific folder
  * register and serve static assets based on an explicit mapping to protect other

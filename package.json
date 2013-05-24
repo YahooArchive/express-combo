@@ -1,7 +1,7 @@
 {
     "name": "express-combo",
     "description": "Combo handler for express applications",
-    "version": "0.0.2",
+    "version": "0.1.0",
     "author": "Caridy Patino <caridy@yahoo-inc.com> (http://github.com/caridy)",
     "contributors": [
         "alberto chan <albertoc@yahoo-inc.com>"

@@ -1,9 +1,11 @@
 Express Combo
 =============
 
-Combo handler for express applications
+Combo handler for express applications.
 
 [![Build Status](https://travis-ci.org/yahoo/express-combo.png?branch=master)][Build Status]
+
+[Build Status]: https://travis-ci.org/yahoo/express-combo
 
 Goals
 -----

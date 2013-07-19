@@ -36,8 +36,8 @@ describe('static', function () {
         description below.
 
         The constructor also set the following properties on init:
-        - {Boolean} `maxageWasCalled` 
-        - {Boolean} `pipeWasCalled` 
+        - {Boolean} `maxageWasCalled`
+        - {Boolean} `pipeWasCalled`
 
 
         @constructor SendStream
@@ -695,8 +695,8 @@ describe('static', function () {
                     // the real getAssetFromFSfn() should cb(err) on this path
                     getAssetFromFSfn(path, function(err, msg) {
                         assert.isUndefined(msg);
-                    	assert.instanceOf(err, Error);
-                    	assert.strictEqual(err.message, 'File not found: ' + path);
+                        assert.instanceOf(err, Error);
+                        assert.strictEqual(err.message, 'File not found: ' + path);
                     });
                 };
                 registerTestGroups();

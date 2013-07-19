@@ -713,7 +713,7 @@ describe('static', function () {
         });
 
         describe('Test normalize normalizes "//"', function () {
-            it('combo path should NOT be "/etc/passwd"', function () {
+            it("combo'd path is subdir of docroot, not /etc/passwd", function () {
                 var fn,
                     req,
                     res,
@@ -725,8 +725,8 @@ describe('static', function () {
                     getAssetFromFSwasCalled = true;
                     // console.log('--> path    : %s', path);
                     // console.log('--> expected: %s', libpath.join(fixturesPath, 'robot.txt'));
-                    assert.strictEqual(libpath.normalize(path),
-                                      libpath.normalize(libpath.join(__dirname, '../fixtures/etc/passwd')),
+                    assert.strictEqual(path,
+                                      libpath.join(fixturesPath, 'etc/passwd'),
                                       'wrong path expected: check normalize()');
                 };
                 registerTestGroups();
@@ -762,8 +762,8 @@ describe('static', function () {
                     getAssetFromFSwasCalled = true;
                     // console.log('--> path    : %s', path);
                     // console.log('--> expected: %s', libpath.join(fixturesPath, 'robot.txt'));
-                    assert.strictEqual(libpath.normalize(path),
-                                      libpath.normalize(libpath.join(fixturesPath, 'robot.txt')),
+                    assert.strictEqual(path,
+                                      libpath.join(fixturesPath, 'robot.txt'),
                                       'wrong path expected: check normalize()');
                 };
                 registerTestGroups();

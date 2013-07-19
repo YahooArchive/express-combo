@@ -13,7 +13,7 @@ var assert = require('chai').assert,
     libpath = require('path'),
     libstatic,
     mockery = require('mockery'),
-    fixturesPath = libpath.join(__dirname, '../fixtures');
+    fixturesPath = libpath.resolve(__dirname, '../fixtures');
 
 describe('static', function () {
 
@@ -652,9 +652,9 @@ describe('static', function () {
                 libstatic.getAssetFromFS = function (path, cb) {
                     getAssetFromFSwasCalled = true;
                     // console.log('--> path    : %s', path);
-                    // console.log('--> expected: %s', libpath.join(__dirname, '..', 'fixtures', 'robot.txt'));
+                    // console.log('--> expected: %s', libpath.join(fixturesPath, 'robot.txt'));
                     assert.strictEqual(libpath.normalize(path),
-                                      libpath.normalize(libpath.join(__dirname, '..', 'fixtures', 'robot.txt')),
+                                      libpath.normalize(libpath.join(fixturesPath, 'robot.txt')),
                                       'wrong path expected: check normalize()');
                 };
                 registerTestGroups();
@@ -675,6 +675,117 @@ describe('static', function () {
         describe('Test mixed content types', function () {
             it('should call stream.error');
         });
+
+        describe('Test normalize restricts access to root & subdirs', function () {
+            it('should NOT return README.md', function () {
+                var fn,
+                    req,
+                    res,
+                    getAssetFromFSfn,
+                    getAssetFromFSwasCalled = false;
+
+                getAssetFromFSfn = libstatic.getAssetFromFS;
+                libstatic.getAssetFromFS = function (path, cb) {
+                    getAssetFromFSwasCalled = true;
+                    //console.log('--> path    : %s', path);
+
+                    // illegal path should be undefined
+                    assert.strictEqual(path, undefined);
+                };
+                registerTestGroups();
+
+                // this is an illegal path
+                req = { url: '/combo?/public/../../README.md', method: 'GET' };
+
+                fn = libstatic.combine({
+                    comboBase: '/combo?'
+                });
+
+                fn(req, res, function () {
+                    // nothing to assert here
+                });
+
+                assert.isTrue(getAssetFromFSwasCalled,
+                              'getAssetFromFS was not called');
+
+                libstatic.getAssetFromFS = getAssetFromFSfn;
+            });
+        });
+
+        describe('Test normalize normalizes "//"', function () {
+            it('combo path should NOT be "/etc/passwd"', function () {
+                var fn,
+                    req,
+                    res,
+                    getAssetFromFSfn,
+                    getAssetFromFSwasCalled = false;
+
+                getAssetFromFSfn = libstatic.getAssetFromFS;
+                libstatic.getAssetFromFS = function (path, cb) {
+                    getAssetFromFSwasCalled = true;
+                    // console.log('--> path    : %s', path);
+                    // console.log('--> expected: %s', libpath.join(fixturesPath, 'robot.txt'));
+                    assert.strictEqual(libpath.normalize(path),
+                                      libpath.normalize(libpath.join(__dirname, '../fixtures/etc/passwd')),
+                                      'wrong path expected: check normalize()');
+                };
+                registerTestGroups();
+
+                // this is an illegal path
+                req = { url: '/combo?/public//\/etc/passwd', method: 'GET' };
+
+                fn = libstatic.combine({
+                    comboBase: '/combo?'
+                });
+
+                fn(req, res, function () {
+                    // nothing to assert here
+                });
+
+                assert.isTrue(getAssetFromFSwasCalled,
+                              'getAssetFromFS was not called');
+
+                libstatic.getAssetFromFS = getAssetFromFSfn;
+            });
+        });
+
+        describe('Test normalize() allows ".." in urls', function () {
+            it('should return contents of robot.txt OK', function () {
+                var fn,
+                    req,
+                    res,
+                    getAssetFromFSfn,
+                    getAssetFromFSwasCalled = false;
+
+                getAssetFromFSfn = libstatic.getAssetFromFS;
+                libstatic.getAssetFromFS = function (path, cb) {
+                    getAssetFromFSwasCalled = true;
+                    // console.log('--> path    : %s', path);
+                    // console.log('--> expected: %s', libpath.join(fixturesPath, 'robot.txt'));
+                    assert.strictEqual(libpath.normalize(path),
+                                      libpath.normalize(libpath.join(fixturesPath, 'robot.txt')),
+                                      'wrong path expected: check normalize()');
+                };
+                registerTestGroups();
+
+                // this is an illegal path
+                req = { url: '/combo?/public/../fixtures/robot.txt', method: 'GET' };
+
+                fn = libstatic.combine({
+                    comboBase: '/combo?'
+                });
+
+                fn(req, res, function () {
+                    // nothing to assert here
+                });
+
+                assert.isTrue(getAssetFromFSwasCalled,
+                              'getAssetFromFS was not called');
+
+                libstatic.getAssetFromFS = getAssetFromFSfn;
+            });
+        });
+
     });
 
     //////////////////////////////////////////////////////////////////////////

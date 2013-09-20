@@ -16,7 +16,9 @@
         "send": "0.1.0",
         "mime": "1.2.6",
         "fresh": "0.1.0",
-        "range-parser": "0.0.4"
+        "range-parser": "0.0.4",
+        "yui-pathogen-decoder": "0.1.x",
+        "yui-combo-middleware": "0.2.x"
     },
     "devDependencies": {
         "chai": "1.5.x",

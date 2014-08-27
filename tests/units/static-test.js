@@ -116,7 +116,10 @@ describe('static', function () {
             useCleanCache: true
         });
 
-        mockery.registerMock('./middleware/static', staticMock);
+        mockery.registerMock('express', {
+            // This is the only part of express that we use.
+            static: staticMock
+        });
         mockery.registerMock('./send', sendMock);
 
         libstatic = require('../../lib/static');
@@ -206,7 +209,7 @@ describe('static', function () {
                 };
 
                 fn(req, res, function (err) {
-                    assert.isUndefined(err, 'err unexpected');
+                    assert(!err, 'err unexpected');
 
                     assert.strictEqual(true, middlewareWasCalled, 'middleware was not called');
                     done();

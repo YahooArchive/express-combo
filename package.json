@@ -11,7 +11,7 @@
         "npm" : ">=1.2.10"
     },
     "dependencies": {
-        "express": "3.x",
+        "express": ">=3.x",
         "debug": "*",
         "send": "0.1.0",
         "mime": "1.2.6",

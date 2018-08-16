@@ -13,17 +13,17 @@
   "dependencies": {
     "debug": "*",
     "express": ">=3.x",
-    "fresh": "0.2.4",
-    "mime": "1.2.11",
+    "fresh": "^0.5.2",
+    "mime": "^2.3.1",
     "range-parser": "1.0.2",
-    "send": "0.9.2"
+    "send": "^0.16.2"
   },
   "devDependencies": {
     "chai": "1.9.1",
-    "express-handlebars": "1.1.x",
-    "istanbul": "0.3.2",
-    "jshint": "2.5.5",
-    "mocha": "1.21.4",
+    "express-handlebars": "^3.0.0",
+    "istanbul": "^0.4.5",
+    "jshint": "^2.9.6",
+    "mocha": "^5.2.0",
     "mockery": "1.4.x",
     "xunit-file": "*",
     "yui-lint": "0.2.0"
